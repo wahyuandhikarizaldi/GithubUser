@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Github User</string>
+    <string name="searchbar_hint">Masukkan username</string>
+    <string name="not_found"> </string>
+    <string name="no_result">No results found</string>
+    <string name="no_follow">No connections yet</string>
+    <string name="tab_text_1">Followers</string>
+    <string name="tab_text_2">Following</string>
+</resources>
