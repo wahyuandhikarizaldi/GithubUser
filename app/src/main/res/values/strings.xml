@@ -6,4 +6,9 @@
     <string name="no_follow">No connections yet</string>
     <string name="tab_text_1">Followers</string>
     <string name="tab_text_2">Following</string>
+    <string name="added">User ditambahkan ke favorit</string>
+    <string name="removed">User dihapus dari favorit</string>
+    <string name="favorite">Favorite</string>
+    <string name="setting">Setting</string>
+    <string name="dark_mode">Dark Mode</string>
 </resources>

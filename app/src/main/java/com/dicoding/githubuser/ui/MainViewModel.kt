@@ -4,11 +4,12 @@ import android.util.Log
 import androidx.lifecycle.*
 import com.dicoding.githubuser.data.remote.response.GithubResponse
 import com.dicoding.githubuser.data.remote.retrofit.ApiConfig
+import com.dicoding.githubuser.helper.SettingPreferences
 import retrofit2.Callback
 import retrofit2.Call
 import retrofit2.Response
 
-class MainViewModel : ViewModel() {
+class MainViewModel(private val pref: SettingPreferences) : ViewModel() {
 
     private val _github = MutableLiveData<GithubResponse>()
     val github: LiveData<GithubResponse> = _github
@@ -20,6 +21,9 @@ class MainViewModel : ViewModel() {
         private const val TAG = "MainViewModel"
     }
 
+    fun getThemeSettings(): LiveData<Boolean> {
+        return pref.getThemeSetting().asLiveData()
+    }
 
     fun findUser(query: String) {
         _isLoading.value = true
@@ -30,6 +34,7 @@ class MainViewModel : ViewModel() {
                 response: Response<GithubResponse>
             ) {
                 _isLoading.value = false
+                Log.d(TAG, "Response: $response")
                 if (response.isSuccessful) {
                     _github.value = response.body()
                 } else {

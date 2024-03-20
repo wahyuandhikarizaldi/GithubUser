@@ -7,7 +7,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import com.dicoding.githubuser.BuildConfig.API_KEY
 import com.dicoding.githubuser.BuildConfig.BASE_URL
 
-
 class ApiConfig {
     companion object {
         fun getApiService(): ApiService {

@@ -1,6 +1,7 @@
 package com.dicoding.githubuser.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import androidx.annotation.StringRes
@@ -12,12 +13,17 @@ import com.bumptech.glide.Glide
 import com.dicoding.githubuser.R
 import com.dicoding.githubuser.data.remote.response.DetailResponse
 import com.dicoding.githubuser.databinding.ActivityDetailBinding
+import com.dicoding.githubuser.helper.ViewModelFactory
+import com.dicoding.githubuser.repository.NoteRepository
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import de.hdodenhof.circleimageview.CircleImageView
 
 class DetailActivity : AppCompatActivity() {
 
-    lateinit var binding: ActivityDetailBinding
+    private lateinit var mNoteRepository: NoteRepository
+    private var _activityDetailBinding: ActivityDetailBinding? = null
+    private val binding get() = _activityDetailBinding
 
     companion object {
         @StringRes
@@ -39,8 +45,8 @@ class DetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDetailBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        _activityDetailBinding = ActivityDetailBinding.inflate(layoutInflater)
+        setContentView(binding?.root)
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar4)
         toolbar.title = ""
@@ -49,7 +55,7 @@ class DetailActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val detailViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(DetailViewModel::class.java)
+        val detailViewModel = obtainViewModel(this@DetailActivity)
 
         val username = intent.getStringExtra("username")
 
@@ -76,20 +82,54 @@ class DetailActivity : AppCompatActivity() {
 
         supportActionBar?.elevation = 0f
 
+        mNoteRepository = NoteRepository(application)
+        mNoteRepository.getNoteByUsername(username!!).observe(this) { note ->
+            Log.d("DetailActivity", "note: $note")
+            if (note != null) {
+                binding?.btnSubmit?.setImageResource(R.drawable.baseline_favorite_24)
+            } else {
+                binding?.btnSubmit?.setImageResource(R.drawable.baseline_favorite_border_24)
+            }
+        }
+
+        binding?.btnSubmit?.setOnClickListener {
+            val noteUsername = detailViewModel.detail.value?.login
+            val noteImage = detailViewModel.detail.value?.avatarUrl
+            if (noteUsername != null) {
+                detailViewModel.handleNoteAction(this@DetailActivity, noteUsername, noteImage)
+            }
+
+
+        }
+
     }
 
     private fun updateUI(detailResponse: DetailResponse) {
-        binding.tvLogin.text = detailResponse.login
-        binding.tvName.text = detailResponse.name
-        binding.tvFollowers.text = detailResponse.followers.toString()
-        binding.tvFollowing.text = detailResponse.following.toString()
-        Glide.with(binding.root.context)
-            .load(detailResponse.avatarUrl)
-            .into(binding.imageView)
+        binding?.tvLogin?.text = detailResponse.login
+        binding?.tvName?.text = detailResponse.name
+        binding?.tvFollowers?.text = detailResponse.followers.toString()
+        binding?.tvFollowing?.text = detailResponse.following.toString()
+        val imageView = binding?.imageView
+        if (imageView is CircleImageView) {
+            Glide.with(this)
+                .load(detailResponse.avatarUrl)
+                .into(imageView)
+        }
 
     }
 
     private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding?.progressBar?.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _activityDetailBinding = null
+    }
+
+    private fun obtainViewModel(activity: AppCompatActivity): DetailViewModel {
+        val factory = ViewModelFactory.getInstance(activity.application)
+        return ViewModelProvider(activity, factory).get(DetailViewModel::class.java)
+    }
+
 }

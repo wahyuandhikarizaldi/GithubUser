@@ -1,14 +1,20 @@
 package com.dicoding.githubuser.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.dicoding.githubuser.R
 import com.dicoding.githubuser.data.remote.response.GithubResponse
 import com.dicoding.githubuser.databinding.ActivityMainBinding
+import com.dicoding.githubuser.helper.SettingPreferences
+import com.dicoding.githubuser.helper.ViewModelFactory
+import com.dicoding.githubuser.helper.dataStore
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,12 +28,23 @@ class MainActivity : AppCompatActivity() {
 
         supportActionBar?.hide()
 
-        val mainViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainViewModel::class.java)
+        val pref = SettingPreferences.getInstance(application.dataStore)
+        val viewModelFactory = ViewModelFactory.getInstance(application, pref)
+        val mainViewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+
 
         val layoutManager = LinearLayoutManager(this)
         binding.rvUser.layoutManager = layoutManager
         val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
         binding.rvUser.addItemDecoration(itemDecoration)
+
+        mainViewModel.getThemeSettings().observe(this) { isDarkModeActive: Boolean ->
+            if (isDarkModeActive) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        }
 
         mainViewModel.github.observe(this) { githubResponse ->
             updateUI(githubResponse)
@@ -52,6 +69,24 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 return@setOnEditorActionListener false
+            }
+
+            searchBar.inflateMenu(R.menu.option_menu)
+            searchBar.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.menu1 -> {
+                        val intent = Intent(this@MainActivity, FavoriteActivity::class.java)
+                        startActivity(intent)
+                        true
+                    }
+                    R.id.menu2 -> {
+                        val intent = Intent(this@MainActivity, SwitchActivity::class.java)
+                        startActivity(intent)
+                        true
+                    }
+                    else -> false
+                }
+
             }
         }
 
